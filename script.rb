@@ -32,10 +32,25 @@ puts 'Dialogs list was downloaded!'
 File.write('result.txt', '')
 users_progressbar = ProgressBar.create(title: 'Chats with users', total: users_ids.length, format: '<%B> %c/%C %t')
 users_ids.each do |user_id|
-  chat_length = vk.messages.get_history(user_id: user_id, count: 200)[0]
+  retries = 0
+  begin
+    chat_length = vk.messages.get_history(user_id: user_id, count: 200)[0]
+  rescue
+    retries += 1
+    sleep 5
+    retry if retries < 3
+    chat_length = 0
+  end
+
   messages_with_current_user = []
   (0..chat_length).step(200) do |offset|
-    messages_portion = vk.messages.get_history(offset: offset, user_id: user_id, count: 200)[1..-1]
+    begin
+      messages_portion = vk.messages.get_history(offset: offset, user_id: user_id, count: 200)[1..-1]
+    rescue
+      puts "banned lol"
+      sleep 5
+      retry
+    end
     messages_with_current_user += messages_portion
     sleep 0.4
   end

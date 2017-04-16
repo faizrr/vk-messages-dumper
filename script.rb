@@ -29,7 +29,8 @@ end
 dialogs_progressbar.finish
 puts 'Dialogs list was downloaded!'
 
-File.write('result.txt', '')
+FileUtils.mkpath 'data'
+
 users_progressbar = ProgressBar.create(title: 'Chats with users', total: users_ids.length, format: '<%B> %c/%C %t')
 users_ids.each do |user_id|
   retries = 0
@@ -43,6 +44,7 @@ users_ids.each do |user_id|
   end
 
   messages_with_current_user = []
+  File.write("data/#{user_id}.txt", '')
   (0..chat_length).step(200) do |offset|
     begin
       messages_portion = vk.messages.get_history(offset: offset, user_id: user_id, count: 200)[1..-1]
@@ -54,7 +56,7 @@ users_ids.each do |user_id|
     messages_with_current_user += messages_portion
     sleep 0.4
   end
-  File.open('result.txt', 'a') do |f|
+  File.open("data/#{user_id}.txt", 'a') do |f|
     messages_with_current_user.each { |m| f << JSON.generate(m) + "\n" }
   end
 
